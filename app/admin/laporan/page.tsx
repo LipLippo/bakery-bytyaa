@@ -217,7 +217,7 @@ export default function LaporanPage() {
               key={status}
               onClick={() => setFilterStatus(status)}
               style={{
-                padding: "0.5rem 1rem", borderRadius: "999px", border: "none", cursor: "pointer",
+                padding: "0.5rem 1rem", borderRadius: "999px", cursor: "pointer",
                 backgroundColor: filterStatus === status ? "var(--primary)" : "var(--card)",
                 color: filterStatus === status ? "white" : "var(--text-muted)",
                 fontWeight: 600, fontSize: "0.85rem",
