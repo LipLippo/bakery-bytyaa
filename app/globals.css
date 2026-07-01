@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f0e6d3;
+  --primary: #2c4a6e;
+  --secondary: #c9534a;
+  --accent: #e07b54;
+  --text: #3a2e28;
+  --text-muted: #7a6a60;
+  --card: #fffaf2;
+  --border: #e0d0bc;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  background-image: url('/bakery-pattern.png');
+  background-size: 450px 450px;
+  background-repeat: repeat;
+  color: var(--text);
+  scroll-behavior: smooth;
+  font-family: var(--font-poppins), sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+  width: 100%;
+}
+
+h1,
+h2,
+h3,
+.logo,
+.heading {
+  font-family: var(--font-heading), serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
 }
