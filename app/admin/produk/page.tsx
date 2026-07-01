@@ -445,7 +445,7 @@ export default function ManajemenProduk() {
                       <button
                         type="button"
                         onClick={() => setIsCategoryDropdownOpen(p => !p)}
-                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", ...inputStyle, cursor: "pointer" }}
+                        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", ...inputStyle, cursor: "pointer" }}
                       >
                         <span>{formData.category}</span>
                         <motion.span animate={{ rotate: isCategoryDropdownOpen ? 180 : 0 }} transition={{ duration: 0.2 }} style={{ display: "flex" }}>

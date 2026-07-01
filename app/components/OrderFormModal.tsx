@@ -14,6 +14,7 @@ type Product = {
   price: number;
   stock: number;
   image: string | null;
+  tag: string | null;
   is_coming_soon: boolean;
 };
 
