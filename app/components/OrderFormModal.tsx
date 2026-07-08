@@ -124,14 +124,17 @@ export default function OrderFormModal() {
   };
 
   const updateQuantity = (id: string, delta: number) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const newQ = item.quantity + delta;
-        if (newQ > item.product.stock) return item;
-        return newQ > 0 ? { ...item, quantity: newQ } : item;
-      }
-      return item;
-    }));
+    setCart(prev => {
+      const updated = prev.map(item => {
+        if (item.id === id) {
+          const newQ = item.quantity + delta;
+          if (newQ > item.product.stock) return item;
+          return { ...item, quantity: newQ };
+        }
+        return item;
+      });
+      return updated.filter(item => item.quantity > 0);
+    });
   };
 
   const removeFromCart = (id: string) => setCart(prev => prev.filter(item => item.id !== id));
@@ -143,7 +146,9 @@ export default function OrderFormModal() {
     return item ? item.quantity : 0;
   };
 
-  const handleKirimPesanan = async () => {
+  const [showQris, setShowQris] = useState(false);
+
+  const handleCheckoutClick = () => {
     if (!customerName || customerName.trim() === "") {
       showToast("Silakan lengkapi nama Anda.", "error");
       return;
@@ -160,6 +165,14 @@ export default function OrderFormModal() {
       return;
     }
 
+    if (paymentMethod === "QRIS") {
+      setShowQris(true);
+    } else {
+      processOrder();
+    }
+  };
+
+  const processOrder = async () => {
     setSubmitting(true);
 
     // 1. Generate Receipt Image & Upload
@@ -235,6 +248,7 @@ export default function OrderFormModal() {
     setCart([]);
     setCustomerName("");
     setCustomerPhone("");
+    setShowQris(false);
     setIsOpen(false);
 
     // Open WhatsApp
@@ -320,7 +334,7 @@ export default function OrderFormModal() {
                 {loading ? (
                   <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)" }}>Memuat menu yang lezat...</div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "1.25rem" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(145px, 1fr))", gap: "1rem" }}>
                     {products.sort((a, b) => {
                       const aIsBest = a.tag?.toLowerCase().includes("best seller") ? 1 : 0;
                       const bIsBest = b.tag?.toLowerCase().includes("best seller") ? 1 : 0;
@@ -329,37 +343,39 @@ export default function OrderFormModal() {
                       const isOutOfStock = product.stock <= 0;
                       const inCartQty = getInCartQty(product.id);
                       return (
-                        <div key={product.id} style={{ backgroundColor: "#ffffff", borderRadius: "1rem", overflow: "hidden", border: "1px solid #f1f5f9", boxShadow: "0 4px 20px rgba(0,0,0,0.02)", display: "flex", flexDirection: "column", transition: "transform 0.2s", cursor: "default" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform = "none"}>
-                          <div style={{ height: "150px", width: "100%", backgroundColor: "#f8fafc", position: "relative" }}>
+                        <div key={product.id} style={{ backgroundColor: "#ffffff", borderRadius: "1.25rem", overflow: "hidden", border: "1px solid #f1f5f9", boxShadow: "0 8px 24px rgba(44,74,110,0.06)", display: "flex", flexDirection: "column", transition: "transform 0.25s, box-shadow 0.25s", cursor: "default" }} onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(44,74,110,0.1)"; }} onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(44,74,110,0.06)"; }}>
+                          <div style={{ height: "130px", width: "100%", backgroundColor: "#f8fafc", position: "relative" }}>
                              <img src={product.image || "/logo-whisk.png"} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                             
+                             {/* Stock Badge on Image */}
+                             {!isOutOfStock && (
+                               <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", backgroundColor: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(4px)", padding: "0.25rem 0.6rem", borderRadius: "999px", fontSize: "0.7rem", fontWeight: 700, color: "var(--primary)", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                                 Sisa: {product.stock}
+                               </div>
+                             )}
+
                              {isOutOfStock && (
                                <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.7)", backdropFilter: "blur(2px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                  <span style={{ backgroundColor: "var(--secondary)", color: "white", padding: "0.35rem 0.75rem", borderRadius: "2rem", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.05em" }}>HABIS</span>
                                </div>
                              )}
                           </div>
+                          
                           <div style={{ padding: "1rem", display: "flex", flexDirection: "column", flex: 1 }}>
-                            <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "0.95rem", fontWeight: 700, color: "var(--primary)" }}>{product.name}</h4>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                              <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 500 }}>Rp {product.price.toLocaleString("id-ID")}</span>
-                              {!isOutOfStock && (
-                                <span style={{ fontSize: "0.75rem", color: "var(--secondary)", fontWeight: 600, backgroundColor: "#fff5f5", padding: "0.2rem 0.5rem", borderRadius: "999px" }}>
-                                  Sisa: {product.stock}
-                                </span>
-                              )}
-                            </div>
+                            <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "0.95rem", fontWeight: 700, color: "var(--primary)", fontFamily: "var(--font-heading)", lineHeight: 1.2 }}>{product.name}</h4>
+                            <div style={{ fontSize: "0.9rem", color: "var(--secondary)", fontWeight: 700, marginBottom: "1rem" }}>Rp {product.price.toLocaleString("id-ID")}</div>
                             
                             <div style={{ marginTop: "auto" }}>
                               {isOutOfStock ? (
-                                <button disabled style={{ width: "100%", padding: "0.5rem", borderRadius: "999px", border: "1px dashed #e2e8f0", backgroundColor: "#f8fafc", color: "#94a3b8", fontSize: "0.8rem", fontWeight: 600, cursor: "not-allowed" }}>Stok Habis</button>
+                                <button disabled style={{ width: "100%", padding: "0.55rem", borderRadius: "0.75rem", border: "none", backgroundColor: "#f1f5f9", color: "#94a3b8", fontSize: "0.8rem", fontWeight: 600, cursor: "not-allowed" }}>Stok Habis</button>
                               ) : inCartQty > 0 ? (
-                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid var(--secondary)", backgroundColor: "#fff5f5", borderRadius: "999px", overflow: "hidden", padding: "0.25rem" }}>
-                                  <button onClick={() => updateQuantity(cart.find(c => c.product.id === product.id)!.id, -1)} style={{ padding: "0.35rem", borderRadius: "50%", border: "none", backgroundColor: "white", color: "var(--secondary)", cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}><Minus size={14} /></button>
-                                  <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--secondary)" }}>{inCartQty}</span>
-                                  <button onClick={() => addToCart(product)} style={{ padding: "0.35rem", borderRadius: "50%", border: "none", backgroundColor: "var(--secondary)", color: "white", cursor: "pointer", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}><Plus size={14} /></button>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", backgroundColor: "#f8fafc", borderRadius: "0.75rem", overflow: "hidden", padding: "0.25rem", border: "1px solid #e2e8f0" }}>
+                                  <button onClick={() => updateQuantity(cart.find(c => c.product.id === product.id)!.id, -1)} style={{ padding: "0.35rem", borderRadius: "0.5rem", border: "none", backgroundColor: "white", color: "var(--text)", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.backgroundColor = "#f1f5f9"} onMouseLeave={e => e.currentTarget.style.backgroundColor = "white"}><Minus size={14} /></button>
+                                  <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--primary)" }}>{inCartQty}</span>
+                                  <button onClick={() => addToCart(product)} style={{ padding: "0.35rem", borderRadius: "0.5rem", border: "none", backgroundColor: "var(--primary)", color: "white", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.backgroundColor = "var(--text)"} onMouseLeave={e => e.currentTarget.style.backgroundColor = "var(--primary)"}><Plus size={14} /></button>
                                 </div>
                               ) : (
-                                <button onClick={() => addToCart(product)} style={{ width: "100%", padding: "0.6rem", borderRadius: "999px", border: "1px solid var(--secondary)", backgroundColor: "transparent", color: "var(--secondary)", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => { e.currentTarget.style.backgroundColor = "var(--secondary)"; e.currentTarget.style.color = "white"; }} onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--secondary)"; }}>+ Tambah</button>
+                                <button onClick={() => addToCart(product)} style={{ width: "100%", padding: "0.6rem", borderRadius: "0.75rem", border: "none", backgroundColor: "var(--secondary)", color: "white", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(201,83,74,0.15)" }} onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.03)"; e.currentTarget.style.backgroundColor = "#b84540"; }} onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.backgroundColor = "var(--secondary)"; }}>+ Tambah</button>
                               )}
                             </div>
                           </div>
@@ -502,7 +518,7 @@ export default function OrderFormModal() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={handleKirimPesanan}
+                    onClick={handleCheckoutClick}
                     disabled={cart.length === 0 || submitting}
                     style={{ 
                       width: "100%", padding: "1rem", borderRadius: "999px", border: "none", 
@@ -526,6 +542,61 @@ export default function OrderFormModal() {
             </div>
           </motion.div>
         </div>
+      </AnimatePresence>
+
+      {/* QRIS Modal Overlay */}
+      <AnimatePresence>
+        {showQris && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 100000, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowQris(false)}
+              style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              style={{ 
+                backgroundColor: "#ffffff", borderRadius: "1.5rem", width: "100%", maxWidth: "420px", 
+                position: "relative", zIndex: 100001, boxShadow: "0 24px 64px rgba(0,0,0,0.15)", 
+                display: "flex", flexDirection: "column", padding: "2.5rem 2rem", alignItems: "center", textAlign: "center"
+              }}
+            >
+              <h3 style={{ margin: "0 0 0.5rem 0", fontFamily: "var(--font-heading)", fontSize: "1.6rem", color: "var(--primary)" }}>Scan QRIS</h3>
+              <p style={{ margin: "0 0 1.5rem 0", fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                Silakan scan QR Code di bawah untuk membayar <strong style={{color: "var(--secondary)", fontSize: "1.1rem"}}>Rp {subtotal.toLocaleString("id-ID")}</strong>.
+              </p>
+              
+              <div style={{ width: "100%", aspectRatio: "1/1.2", position: "relative", marginBottom: "2rem", borderRadius: "1rem", overflow: "hidden", border: "2px solid #f1f5f9", padding: "0.5rem" }}>
+                <img src="/qris.jpeg" alt="QRIS Payment" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "0.5rem" }} />
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => processOrder()}
+                disabled={submitting}
+                style={{ 
+                  width: "100%", padding: "1rem", borderRadius: "999px", border: "none", 
+                  backgroundColor: "var(--secondary)", color: "white", 
+                  fontWeight: 700, fontSize: "1rem", cursor: submitting ? "not-allowed" : "pointer",
+                  display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem",
+                  boxShadow: "0 8px 25px rgba(201,83,74,0.25)",
+                  transition: "background 0.2s",
+                  opacity: submitting ? 0.7 : 1
+                }}
+              >
+                {submitting ? "Memproses..." : <><Send size={16} /> Sudah Bayar, Lanjutkan ke WhatsApp</>}
+              </motion.button>
+              
+              <button onClick={() => setShowQris(false)} style={{ marginTop: "1.25rem", background: "none", border: "none", color: "#94a3b8", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "var(--primary)"} onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}>
+                Batalkan & Kembali
+              </button>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
 
       {/* Hidden Receipt Element for html2canvas */}

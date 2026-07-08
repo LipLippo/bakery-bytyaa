@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, RefreshCw, Eye, X, CheckCircle, Clock, XCircle, ShoppingBag, Phone, User, CreditCard, Package, Trash2, AlertTriangle } from "lucide-react";
+import { FileText, RefreshCw, Eye, X, CheckCircle, Clock, XCircle, ShoppingBag, Phone, User, CreditCard, Package, Trash2, AlertTriangle, Download } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -31,6 +31,30 @@ const STATUS_CONFIG = {
 };
 
 function ReceiptModal({ order, onClose }: { order: Order; onClose: () => void }) {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!order.receipt_url) return;
+    setDownloading(true);
+    try {
+      const response = await fetch(order.receipt_url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Nota-${order.order_number}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Gagal mendownload nota", error);
+      window.open(order.receipt_url, "_blank");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
       <motion.div
@@ -43,23 +67,45 @@ function ReceiptModal({ order, onClose }: { order: Order; onClose: () => void })
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.3, ease: EASE }}
-        style={{ position: "relative", zIndex: 1, backgroundColor: "white", borderRadius: "1.5rem", padding: "2rem", maxWidth: "500px", width: "100%", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" }}
+        style={{ 
+          position: "relative", zIndex: 1, backgroundColor: "white", borderRadius: "1.5rem", 
+          padding: "1.5rem", maxWidth: "600px", width: "100%", maxHeight: "90vh", 
+          display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" 
+        }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexShrink: 0 }}>
           <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800, color: "var(--primary)" }}>Nota Pesanan</h3>
           <button onClick={onClose} style={{ background: "#f8fafc", border: "none", cursor: "pointer", padding: "0.5rem", borderRadius: "50%" }}>
             <X size={18} />
           </button>
         </div>
+        
         {order.receipt_url ? (
-          <img
-            src={order.receipt_url}
-            alt={`Nota ${order.order_number}`}
-            style={{ width: "100%", borderRadius: "1rem", border: "1px solid #f1f5f9", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}
-          />
+          <>
+            <div style={{ overflowY: "auto", flex: 1, marginBottom: "1rem", borderRadius: "1rem", border: "1px solid #f1f5f9", backgroundColor: "#f8fafc", display: "flex", justifyContent: "center", padding: "0.5rem" }}>
+              <img
+                src={order.receipt_url}
+                alt={`Nota ${order.order_number}`}
+                style={{ maxWidth: "100%", height: "auto", objectFit: "contain", borderRadius: "0.5rem" }}
+              />
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleDownload}
+              disabled={downloading}
+              style={{
+                flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", 
+                width: "100%", padding: "0.85rem", backgroundColor: "var(--secondary)", color: "white", 
+                border: "none", borderRadius: "0.75rem", fontWeight: 600, fontSize: "0.95rem", cursor: downloading ? "not-allowed" : "pointer"
+              }}
+            >
+              <Download size={18} /> {downloading ? "Mengunduh..." : "Download Nota"}
+            </motion.button>
+          </>
         ) : (
-          <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8", backgroundColor: "#f8fafc", borderRadius: "1rem", border: "1px dashed #cbd5e1" }}>
-            <FileText size={32} style={{ margin: "0 auto 0.75rem", opacity: 0.5 }} />
+          <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8", backgroundColor: "#f8fafc", borderRadius: "1rem", border: "1px dashed #cbd5e1", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+            <FileText size={32} style={{ marginBottom: "0.75rem", opacity: 0.5 }} />
             <p style={{ margin: 0, fontSize: "0.9rem" }}>Gambar nota tidak tersedia</p>
           </div>
         )}

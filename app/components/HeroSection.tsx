@@ -9,7 +9,6 @@ const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 export default function HeroSection() {
   return (
     <section
-      id="home"
       style={{
         minHeight: "100vh",
         display: "flex",

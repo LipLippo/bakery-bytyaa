@@ -8,6 +8,7 @@ const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 export default function SpecialsSection() {
   return (
     <section
+      id="about"
       style={{
         padding: "5rem 1.5rem 8rem",
         display: "flex",
@@ -116,6 +117,7 @@ export default function SpecialsSection() {
               src="/logo-whisk.png"
               alt="Bakery ByTyaa Logo"
               fill
+              priority
               style={{ objectFit: "cover", transform: "scale(1.15)" }}
             />
           </div>

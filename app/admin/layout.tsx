@@ -43,7 +43,12 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: "var(--background)" }}>
+    <div className="flex min-h-screen" style={{ 
+      backgroundColor: "var(--background)",
+      backgroundImage: "url('/bakery-pattern.png')",
+      backgroundSize: "450px 450px",
+      backgroundRepeat: "repeat"
+    }}>
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 

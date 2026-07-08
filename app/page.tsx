@@ -8,7 +8,7 @@ import OrderFormModal from "./components/OrderFormModal";
 
 export default function Home() {
   return (
-    <main>
+    <main id="home">
       <Navbar />
       <HeroSection />
       <MenuSection />
